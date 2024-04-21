@@ -30,7 +30,37 @@
             });
         }
     </script>
-    <script src="app.js"></script>
+    <script>
+        function uploadFile() {
+            let fileInput = document.getElementById('csvFile');
+            if (!fileInput.files.length) {
+                console.log("No file selected");
+                return;
+            }
+            let file = fileInput.files[0];
+            let formData = new FormData();
+            formData.append('file', file);
+            
+            fetch('http://localhost:5000/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                console.log(data);
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+            
+            
+        }
+    </script>
 </head>
 
 <body>
