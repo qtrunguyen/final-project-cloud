@@ -56,7 +56,7 @@
             let formData = new FormData();
             formData.append('file', file);
             
-            fetch('http://localhost:5000/upload', {
+            fetch('https://final-project-clout.azurewebsites.net/upload', {
                 method: 'POST',
                 body: formData
             })
@@ -80,7 +80,7 @@
                 alert('Please enter a search query.');
                 return;
             }
-            fetch(`http://localhost:5000/search_data?hshd_num=${searchQuery}`)
+            fetch(`https://final-project-clout.azurewebsites.net/search_data?hshd_num=${searchQuery}`)
                 .then(response => response.json())
                 .then(data => {
                     const tableHeader = document.getElementById('data-table').getElementsByTagName('thead')[0];
@@ -132,7 +132,7 @@
         }
 
         window.onload = function() {
-            fetch('http://localhost:5000/uploaded_data')
+            fetch('https://final-project-clout.azurewebsites.net/uploaded_data')
                 .then(response => response.json())
                 .then(data => {
                     const tableHeader = document.getElementById('data-table').getElementsByTagName('thead')[0];
@@ -184,14 +184,14 @@
 <body>
     <div id="loginSection">
         <h2>Sign Up</h2>
-        <form onsubmit="submitForm(event, 'http://localhost:5000/signup')">
+        <form onsubmit="submitForm(event, 'https://final-project-clout.azurewebsites.net/signup')">
             <input type="text" name="username" placeholder="Username" required>
             <input type="password" name="password" placeholder="Password" required>
             <button type="submit">Sign Up</button>
         </form>
 
         <h2>Login</h2>
-        <form onsubmit="submitForm(event, 'http://localhost:5000/login')">
+        <form onsubmit="submitForm(event, 'https://final-project-clout.azurewebsites.net/login')">
             <input type="text" name="username" placeholder="Username" required>
             <input type="password" name="password" placeholder="Password" required>
             <button type="submit">Login</button>
@@ -213,7 +213,7 @@
 
     <div id="plotSection" style="display: none;">
         <p>Click the button below to view the plot:</p>
-        <a href="http://localhost:5000/plot" class="button">View Plot</a>
+        <a href="https://final-project-clout.azurewebsites.net/plot" class="button">View Plot</a>
     </div>
 
     <div id="dataTableDiv" style="display: none;">

@@ -18,7 +18,12 @@ app.config['SECRET_KEY'] = os.urandom(24)
 
 # Configuration
 app.config['UPLOAD_FOLDER'] = "C:/Users/trung/Documents/Project/final-project-cloud/backend/uploads" # Specify the directory to store uploaded files
-DATABASE_URL = "postgresql://postgres:123456@localhost/postgres"
+DATABASE_HOST = "pacificscloudcomputing-server.postgres.database.azure.com"
+DATABASE_USER = "aewfdemiyb"
+DATABASE_PORT = 5432
+DATABASE_NAME = "postgres"
+DATABASE_PASSWORD = "Pacific123"
+DATABASE_URL = f"postgresql://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}"
 
 try:
     conn = connect(DATABASE_URL)
