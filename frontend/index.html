@@ -38,6 +38,7 @@
                     document.getElementById('uploadSection').style.display = 'block';
                     document.getElementById('dataTableDiv').style.display = 'block';
                     document.getElementById('searchSection').style.display = 'block';
+                    document.getElementById('plotSection').style.display = 'block';
                 } else {
                     alert(data.error);
                 }
@@ -208,6 +209,11 @@
         <h2>Search Uploaded Data</h2>
         <input type="text" id="search-input" placeholder="Search by hshd_num">
         <button onclick="searchUploadedData()">Search</button>
+    </div>
+
+    <div id="plotSection" style="display: none;">
+        <p>Click the button below to view the plot:</p>
+        <a href="http://localhost:5000/plot" class="button">View Plot</a>
     </div>
 
     <div id="dataTableDiv" style="display: none;">

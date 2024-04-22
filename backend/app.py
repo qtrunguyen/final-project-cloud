@@ -1,10 +1,14 @@
-from flask import Flask, request, session, jsonify
+from flask import Flask, request, session, jsonify, render_template
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from werkzeug.utils import secure_filename
 import os
 import csv
 from psycopg2 import connect, sql, Error
+import io
+import base64
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
 
 app = Flask(__name__)
 CORS(app)
@@ -99,12 +103,13 @@ def upload_file():
 
 import psycopg2
 
+
 @app.route('/uploaded_data', methods=['GET'])
 def get_uploaded_data():
     connection = psycopg2.connect(DATABASE_URL)
     cursor = connection.cursor()
 
-    cursor.execute("SELECT hshd_num, l, * FROM uploaded_data LIMIT 2")  
+    cursor.execute("SELECT hshd_num, l, * FROM uploaded_data LIMIT 100")  
     data = cursor.fetchall()
     column_names = [desc[0] for desc in cursor.description]
 
@@ -112,6 +117,7 @@ def get_uploaded_data():
     result = [dict(zip(column_names, row)) for row in data]
 
     return jsonify(result)
+
 
 @app.route('/search_data', methods=['GET'])
 def search_data():
@@ -136,6 +142,89 @@ def search_data():
     print(column_names)
     return jsonify(result)
 
+@app.route('/plot', methods=['GET'])
+def plot():
+    connection = psycopg2.connect(DATABASE_URL)
+    cursor = connection.cursor()
+
+    # Fetch data for household size vs spend
+    cursor.execute("SELECT hh_size, spend FROM uploaded_data")  
+    data = cursor.fetchall()
+
+    # Extract hh_size and spend values from the data
+    hh_size = [row[0] for row in data]
+    spend = [row[1] for row in data]
+
+    # Create the plot for household size vs spend
+    fig_hh_size = Figure()
+    axis_hh_size = fig_hh_size.add_subplot(1, 1, 1)
+    axis_hh_size.scatter(hh_size, spend)
+    axis_hh_size.set_xlabel('Household Size')
+    axis_hh_size.set_ylabel('Spend')
+
+    # Convert the plot to a PNG image
+    output_hh_size = io.BytesIO()
+    FigureCanvas(fig_hh_size).print_png(output_hh_size)
+
+    # Encode the PNG image as a base64 string
+    plot_data_hh_size = output_hh_size.getvalue()
+
+    # Pass the encoded plot data to the template for household size vs spend
+    plot_url_hh_size = "data:image/png;base64," + base64.b64encode(plot_data_hh_size).decode()
+
+    # Fetch data for children vs spend
+    cursor.execute("SELECT children, spend FROM uploaded_data")  
+    data_children = cursor.fetchall()
+
+    # Extract children and spend values from the data
+    children = [row[0] for row in data_children]
+    spend_children = [row[1] for row in data_children]
+
+    # Create the plot for children vs spend
+    fig_children = Figure()
+    axis_children = fig_children.add_subplot(1, 1, 1)
+    axis_children.scatter(children, spend_children)
+    axis_children.set_xlabel('Number of Children')
+    axis_children.set_ylabel('Spend')
+
+    # Convert the plot to a PNG image
+    output_children = io.BytesIO()
+    FigureCanvas(fig_children).print_png(output_children)
+
+    # Encode the PNG image as a base64 string
+    plot_data_children = output_children.getvalue()
+
+    # Pass the encoded plot data to the template for children vs spend
+    plot_url_children = "data:image/png;base64," + base64.b64encode(plot_data_children).decode()
+
+    # Fetch data for income range vs spend
+    cursor.execute("SELECT income_range, spend FROM uploaded_data")  
+    data_income_range = cursor.fetchall()
+
+    # Extract income range and spend values from the data
+    income_range = [row[0] for row in data_income_range]
+    spend_income_range = [row[1] for row in data_income_range]
+
+    # Create the plot for income range vs spend
+    fig_income_range = Figure()
+    axis_income_range = fig_income_range.add_subplot(1, 1, 1)
+    axis_income_range.scatter(income_range, spend_income_range)
+    axis_income_range.set_xlabel('Income Range')
+    axis_income_range.set_ylabel('Spend')
+
+    # Convert the plot to a PNG image
+    output_income_range = io.BytesIO()
+    FigureCanvas(fig_income_range).print_png(output_income_range)
+
+    # Encode the PNG image as a base64 string
+    plot_data_income_range = output_income_range.getvalue()
+
+    # Pass the encoded plot data to the template for income range vs spend
+    plot_url_income_range = "data:image/png;base64," + base64.b64encode(plot_data_income_range).decode()
+
+    return render_template('plot.html', plot_url_hh_size=plot_url_hh_size, plot_url_children=plot_url_children, plot_url_income_range=plot_url_income_range)
+
+
 # Helper function to check if the file type is allowed
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'csv'}
@@ -145,6 +234,13 @@ def allowed_file(filename):
 def insert_into_postgres(filename):
     connection = connect(DATABASE_URL)
     cursor = connection.cursor()
+
+    cursor.execute("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'uploaded_data')")
+    table_exists = cursor.fetchone()[0]
+
+    if table_exists:
+        # Truncate the table to remove old data
+        cursor.execute("TRUNCATE TABLE uploaded_data")
 
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
