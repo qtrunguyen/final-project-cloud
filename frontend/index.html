@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CSV Upload App</title>
     <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
     </style>
     <script>
         function submitForm(e, url) {
@@ -24,6 +36,8 @@
                 if (data.success) {
                     document.getElementById('loginSection').style.display = 'none';
                     document.getElementById('uploadSection').style.display = 'block';
+                    document.getElementById('dataTableDiv').style.display = 'block';
+                    document.getElementById('searchSection').style.display = 'block';
                 } else {
                     alert(data.error);
                 }
@@ -57,8 +71,111 @@
             .catch(error => {
                 console.error('There was a problem with the fetch operation:', error);
             });
-            
-            
+        } 
+
+        function searchUploadedData() {
+            const searchQuery = document.getElementById('search-input').value.trim();
+            if (!searchQuery) {
+                alert('Please enter a search query.');
+                return;
+            }
+            fetch(`http://localhost:5000/search_data?hshd_num=${searchQuery}`)
+                .then(response => response.json())
+                .then(data => {
+                    const tableHeader = document.getElementById('data-table').getElementsByTagName('thead')[0];
+                    const tableBody = document.getElementById('data-table').getElementsByTagName('tbody')[0];
+
+                    // Clear existing content
+                    tableHeader.innerHTML = '';
+                    tableBody.innerHTML = '';
+
+                    // Create table header
+                    const headerRow = document.createElement('tr');
+                    const hshdNumTh = document.createElement('th');
+                    hshdNumTh.textContent = 'hshd_num';
+                    headerRow.appendChild(hshdNumTh);
+
+                    for (const key in data[0]) {
+                        if (data[0].hasOwnProperty(key) && key !== 'hshd_num') {
+                            const th = document.createElement('th');
+                            th.textContent = key;
+                            headerRow.appendChild(th);
+                        }
+                    }
+                    tableHeader.appendChild(headerRow);
+
+                    // Populate table body
+                    data.forEach(row => {
+                        const tr = document.createElement('tr');
+                        // Add hshd_num as the first column in each row
+                        const hshdNumTd = document.createElement('td');
+                        hshdNumTd.textContent = row['hshd_num'];
+                        tr.appendChild(hshdNumTd);
+
+                        // Add all other columns
+                        for (const key in row) {
+                            if (row.hasOwnProperty(key) && key !== 'hshd_num') {
+                                const td = document.createElement('td');
+                                td.textContent = row[key];
+                                tr.appendChild(td);
+                            }
+                        }
+                        tableBody.appendChild(tr);
+                    });
+
+                    if (data.length === 0) {
+                        alert('No matching rows found.');
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        window.onload = function() {
+            fetch('http://localhost:5000/uploaded_data')
+                .then(response => response.json())
+                .then(data => {
+                    const tableHeader = document.getElementById('data-table').getElementsByTagName('thead')[0];
+                    const tableBody = document.getElementById('data-table').getElementsByTagName('tbody')[0];
+
+                    // Clear existing content
+                    tableHeader.innerHTML = '';
+                    tableBody.innerHTML = '';
+
+                    // Create table header
+                    const headerRow = document.createElement('tr');
+                    const hshdNumTh = document.createElement('th');
+                    hshdNumTh.textContent = 'hshd_num';
+                    headerRow.appendChild(hshdNumTh);
+
+                    for (const key in data[0]) {
+                        if (data[0].hasOwnProperty(key) && key !== 'hshd_num') {
+                            const th = document.createElement('th');
+                            th.textContent = key;
+                            headerRow.appendChild(th);
+                        }
+                    }
+                    tableHeader.appendChild(headerRow);
+
+                    // Populate table body
+                    data.forEach(row => {
+                        const tr = document.createElement('tr');
+                        // Add hshd_num as the first column in each row
+                        const hshdNumTd = document.createElement('td');
+                        hshdNumTd.textContent = row['hshd_num'];
+                        tr.appendChild(hshdNumTd);
+
+                        // Add all other columns
+                        for (const key in row) {
+                            if (row.hasOwnProperty(key) && key !== 'hshd_num') {
+                                const td = document.createElement('td');
+                                td.textContent = row[key];
+                                tr.appendChild(td);
+                            }
+                        }
+                        tableBody.appendChild(tr);
+                    });
+                })
+                .catch(error => console.error('Error fetching data:', error));
         }
     </script>
 </head>
@@ -81,10 +198,28 @@
     </div>
 
     <div id="uploadSection" style="display: none;">
-        <h1>Upload CSV File</h1>
+        <h1>Upload CSV File (upload the merged file only)</h1>
         <input type="file" id="csvFile" accept=".csv">
         <button id="uploadButton" onclick="uploadFile()"> Upload </button>
         <div id="message"></div>
     </div>
+
+    <div id="searchSection" style="display: none;">
+        <h2>Search Uploaded Data</h2>
+        <input type="text" id="search-input" placeholder="Search by hshd_num">
+        <button onclick="searchUploadedData()">Search</button>
+    </div>
+
+    <div id="dataTableDiv" style="display: none;">
+        <table id="data-table">
+            <thead>
+                <!-- Table header will be populated dynamically -->
+            </thead>
+            <tbody>
+                <!-- Table body will be populated dynamically -->
+            </tbody>
+        </table>
+    </div>
+
 </body>
 </html>

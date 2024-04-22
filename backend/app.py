@@ -97,6 +97,45 @@ def upload_file():
 
     return jsonify({'error': 'File type not allowed'})
 
+import psycopg2
+
+@app.route('/uploaded_data', methods=['GET'])
+def get_uploaded_data():
+    connection = psycopg2.connect(DATABASE_URL)
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT hshd_num, l, * FROM uploaded_data LIMIT 2")  
+    data = cursor.fetchall()
+    column_names = [desc[0] for desc in cursor.description]
+
+    # Create a list of dictionaries where each dictionary represents a row
+    result = [dict(zip(column_names, row)) for row in data]
+
+    return jsonify(result)
+
+@app.route('/search_data', methods=['GET'])
+def search_data():
+    connection = psycopg2.connect(DATABASE_URL)
+    cursor = connection.cursor()
+
+    hshd_num = request.args.get('hshd_num')
+
+    if hshd_num:
+        # If hshd_num is provided, fetch rows matching the hshd_num
+        cursor.execute("SELECT * FROM uploaded_data WHERE hshd_num = %s LIMIT 100", (hshd_num,))
+    else:
+        # If hshd_num is not provided, fetch the first 100 rows
+        cursor.execute("SELECT * FROM uploaded_data LIMIT 100")
+
+    data = cursor.fetchall()
+    column_names = [desc[0] for desc in cursor.description]
+
+    # Create a list of dictionaries where each dictionary represents a row
+    result = [dict(zip(column_names, row)) for row in data]
+
+    print(column_names)
+    return jsonify(result)
+
 # Helper function to check if the file type is allowed
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'csv'}
